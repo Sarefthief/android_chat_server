@@ -33,9 +33,9 @@ public class ServerUserThread extends Thread
         while(true){
             userName = reader.readLine();
             if ((server.getUserNames().contains(userName))||(userName.equals("Server"))){
-                writer.println("0");
+                writer.println("nickname is occupied");
             } else {
-                writer.println("1");
+                writer.println("nickname is free");
                 break;
             }
         }
@@ -48,7 +48,7 @@ public class ServerUserThread extends Thread
         ObjectOut.flush();
         server.addUserName(userName);
         ps.println("User " + userName + " is connected.");
-        server.messageHistory(this);
+        server.printHistory(this);
         serverMessage = new Message("Server","New user connected: " + userName, new Date());
         server.broadcast(serverMessage, this);
     }
@@ -69,10 +69,7 @@ public class ServerUserThread extends Thread
                     }
                     if ((serverMessage.getMessage().charAt(0) == '/')&&(serverMessage.getMessage().charAt(1) == 'w')){
                         words = serverMessage.getMessage().split(" ");
-                            if (server.getUserNames().contains(words[1])){
-                            //StringBuilder builder = new StringBuilder(serverMessage.getMessage());
-                            //serverMessage.setMessage(builder.substring(4 + words[1].length()));
-                            //serverMessage.setUsername(userName + "(Private)");
+                        if (server.getUserNames().contains(words[1])){
                             server.sendPrivate(serverMessage, words[1]);
                         } else {
                             ObjectOut.writeObject(new Message ("Server", "This user does not exists.", new Date()));

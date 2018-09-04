@@ -66,11 +66,12 @@ public class Server
     /**
      * @param user user to send a history
      */
-    void messageHistory(ServerUserThread user)
+    void printHistory(ServerUserThread user)
     {
         int num;
-        if(messages.size() > 10) {
-            num = messages.size() - 10;
+        int MAX_NUM_OF_MESSAGES = 10;
+        if(messages.size() > MAX_NUM_OF_MESSAGES) {
+            num = messages.size() - MAX_NUM_OF_MESSAGES;
         } else {
             num = 0;
         }
