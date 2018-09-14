@@ -12,7 +12,6 @@ public class ServerUserThread extends Thread
     private Server server;
     private ObjectInputStream ObjectIn;
     private ObjectOutputStream ObjectOut;
-    private Message serverMessage;
 
     /**
      * Constructor with nickname initialization
@@ -23,34 +22,6 @@ public class ServerUserThread extends Thread
     {
         this.user = user;
         this.server = server;
-
-        InputStream input = user.getInputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input,"UTF-8"));
-        ObjectIn = new ObjectInputStream(user.getInputStream());
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(user.getOutputStream(),"UTF-8"),true);
-        PrintStream ps = new PrintStream(System.out, true, "UTF-8");
-
-        while(true){
-            userName = reader.readLine();
-            if ((server.getUserNames().contains(userName))||(userName.equals("Server"))){
-                writer.println("nickname is occupied");
-            } else {
-                writer.println("nickname is free");
-                break;
-            }
-        }
-        try{
-            TimeUnit.MILLISECONDS.sleep(10);
-        } catch (InterruptedException ex){
-            System.out.println("Interrupted exception");
-        }
-        ObjectOut = new ObjectOutputStream(user.getOutputStream());
-        ObjectOut.flush();
-        server.addUserName(userName);
-        ps.println("User " + userName + " is connected.");
-        server.printHistory(this);
-        serverMessage = new Message("Server","New user connected: " + userName, new Date());
-        server.broadcast(serverMessage, this);
     }
 
     /**
@@ -59,10 +30,12 @@ public class ServerUserThread extends Thread
     public void run()
     {
         try {
+            setNickname();
             String[] words;
+
             while(true){
                 try{
-                    serverMessage = (Message) ObjectIn.readObject();
+                    Message serverMessage = (Message) ObjectIn.readObject();
                     serverMessage.setDate(new Date());
                     if (serverMessage.getMessage().equals("/exit")){
                         break;
@@ -81,27 +54,61 @@ public class ServerUserThread extends Thread
                     System.out.println("Class not found");
                 }
             }
+
             server.removeUser(userName, this);
             user.close();
-            serverMessage = new Message("Server", userName + " has quitted.", new Date());
+            Message serverMessage = new Message("Server", userName + " has quitted.", new Date());
             server.broadcast(serverMessage, this);
 
         } catch (IOException ex) {
             server.removeUser(userName, this);
-            serverMessage = new Message("Server", userName + " has quitted.", new Date());
+            Message serverMessage = new Message("Server", userName + " has quitted.", new Date());
             server.broadcast(serverMessage, this);
         }
     }
 
-    /**
-     * @return string user name
-     */
-    String getUserName()
+    private void setNickname() throws IOException
     {
-        return userName;
+        setInputObjectStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(user.getInputStream(),"UTF-8"));
+        PrintWriter writer = new PrintWriter(new OutputStreamWriter(user.getOutputStream(),"UTF-8"),true);
+        PrintStream ps = new PrintStream(System.out, true, "UTF-8");
+
+        while(true){
+            userName = reader.readLine();
+            if ((server.getUserNames().contains(userName))||(userName.equals("Server"))){
+                writer.println("nickname is occupied");
+            } else {
+                writer.println("nickname is free");
+                break;
+            }
+        }
+
+        setOutputObjectStream();
+        server.addUserName(userName);
+        ps.println("User " + userName + " is connected.");
+        server.printHistory(this);
+        Message serverMessage = new Message("Server","New user connected: " + userName, new Date());
+        server.broadcast(serverMessage, this);
     }
 
-    /**
+    private void setInputObjectStream() throws IOException
+    {
+        ObjectIn = new ObjectInputStream(user.getInputStream());
+    }
+
+    private void setOutputObjectStream() throws IOException
+    {
+        try {
+            TimeUnit.MILLISECONDS.sleep(20);
+        } catch (InterruptedException e) {
+            System.out.println("InterruptedException");
+        }
+        ObjectOut = new ObjectOutputStream(user.getOutputStream());
+        ObjectOut.flush();
+    }
+
+   /**
      * Sends a message to the client.w
      */
     public void sendMessage(Message message)
@@ -111,5 +118,13 @@ public class ServerUserThread extends Thread
         } catch (IOException ex){
             System.out.println("Send message IO exception");
         }
+    }
+
+    /**
+     * @return string user name
+     */
+    String getUserName()
+    {
+        return userName;
     }
 }
