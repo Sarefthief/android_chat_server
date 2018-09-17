@@ -12,6 +12,8 @@ public class ServerUserThread extends Thread
     private Server server;
     private ObjectInputStream ObjectIn;
     private ObjectOutputStream ObjectOut;
+    private BufferedReader reader;
+    private PrintWriter writer;
 
     /**
      * Constructor with nickname initialization
@@ -70,8 +72,8 @@ public class ServerUserThread extends Thread
     private void setNickname() throws IOException
     {
         setInputObjectStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(user.getInputStream(),"UTF-8"));
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(user.getOutputStream(),"UTF-8"),true);
+        reader = new BufferedReader(new InputStreamReader(user.getInputStream(),"UTF-8"));
+        writer = new PrintWriter(new OutputStreamWriter(user.getOutputStream(),"UTF-8"),true);
         PrintStream ps = new PrintStream(System.out, true, "UTF-8");
 
         while(true){
@@ -86,10 +88,12 @@ public class ServerUserThread extends Thread
 
         setOutputObjectStream();
         server.addUserName(userName);
-        ps.println("User " + userName + " is connected.");
         server.printHistory(this);
+        server.sendListOfUsers(this);
+
         Message serverMessage = new Message("Server","New user connected: " + userName, new Date());
         server.broadcast(serverMessage, this);
+        ps.println("User " + userName + " is connected.");
     }
 
     private void setInputObjectStream() throws IOException
@@ -111,13 +115,18 @@ public class ServerUserThread extends Thread
    /**
      * Sends a message to the client.w
      */
-    public void sendMessage(Message message)
+   void sendMessage(Message message)
     {
         try{
             ObjectOut.writeObject(message);
         } catch (IOException ex){
             System.out.println("Send message IO exception");
         }
+    }
+
+    void sendNicknameOfUser(String user)
+    {
+        writer.println(user);
     }
 
     /**

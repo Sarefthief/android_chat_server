@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class Server
@@ -79,6 +80,13 @@ public class Server
             for (int i = num; i <= messages.size()-1; i++) {
                 user.sendMessage(messages.get(i));
             }
+        }
+    }
+
+    void sendListOfUsers(ServerUserThread user)
+    {
+        for (String userName : userNames) {
+            user.sendNicknameOfUser(userName);
         }
     }
 
