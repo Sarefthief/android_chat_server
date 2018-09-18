@@ -85,9 +85,12 @@ public class Server
 
     void sendListOfUsers(ServerUserThread user)
     {
-        for (String userName : userNames) {
-            user.sendNicknameOfUser(userName);
+        if(userNames.size()!= 0){
+            for (String userName : userNames) {
+                user.sendNicknameOfUser(userName);
+            }
         }
+        user.sendNicknameOfUser("Server");
     }
 
     /**

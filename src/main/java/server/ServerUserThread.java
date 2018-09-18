@@ -87,9 +87,9 @@ public class ServerUserThread extends Thread
         }
 
         setOutputObjectStream();
+        server.sendListOfUsers(this);
         server.addUserName(userName);
         server.printHistory(this);
-        server.sendListOfUsers(this);
 
         Message serverMessage = new Message("Server","New user connected: " + userName, new Date());
         server.broadcast(serverMessage, this);
